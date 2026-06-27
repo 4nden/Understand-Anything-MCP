@@ -49,5 +49,9 @@ def validate_license(request: Request, req: ValidateRequest, db: Session = Depen
     return {"valid": True, "tier": license_key.tier}
 
 @app.get("/")
-def read_root():
-    return {"message": "UA-MCP License API is running"}
+def read_root(db: Session = Depends(get_db)):
+    # Run a lightweight query to ensure Supabase registers API activity
+    # and doesn't auto-pause the project after 7 days.
+    from sqlalchemy import text
+    db.execute(text("SELECT 1"))
+    return {"message": "UA-MCP License API is running", "database": "connected"}
