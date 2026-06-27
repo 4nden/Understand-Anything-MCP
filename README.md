@@ -65,18 +65,11 @@ Available out of the box with no license required.
 - `ua_ci_check`: Analyzes Git PR diffs for architectural impact.
   - *Input*: `{"pr_diff": "..."}`
 
-- `add_nodes`: Add new entities to the knowledge graph.
-- `add_edges`: Define relationships between entities.
-- `read_graph`: Retrieve portions of the knowledge graph.
-- `search_nodes`: Find entities by name, tag, or metadata.
-- `delete_nodes`: Remove entities from the graph.
-- `delete_edges`: Remove relationships.
-
 ## Pricing
 
 | Tier | Price | Features |
 |---|---|---|
-| **Free** | $0/mo | Basic graph operations, up to 1000 nodes, local storage. |
+| **Free** | $0/mo | Basic graph operations, local storage. |
 | **Pro** | $29/mo | Unlimited nodes, advanced graph analytics, semantic search, priority support. |
 | **Team** | $99/mo | Multi-user sync, CI/CD integration, advanced validation, dedicated support. |
 

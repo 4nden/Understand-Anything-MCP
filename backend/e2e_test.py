@@ -6,9 +6,16 @@ import requests
 import stripe
 from fastapi.testclient import TestClient
 from main import app, get_db
-from models import LicenseKey, Base, engine, SessionLocal
+from models import LicenseKey, Base
 from webhook import STRIPE_WEBHOOK_SECRET
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 import time
+
+# Use in-memory SQLite for testing so we don't hit locks from the running Uvicorn server
+engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,6 +27,8 @@ def override_get_db():
         db.close()
 
 app.dependency_overrides[get_db] = override_get_db
+from webhook import get_db as webhook_get_db
+app.dependency_overrides[webhook_get_db] = override_get_db
 
 client = TestClient(app)
 
@@ -81,6 +90,29 @@ def test_e2e_flow():
     # Asserting how requireTier('Team') would behave
     assert validate_free.json()["tier"] != "Team", "Free key should not have Team access"
     print("Free-tier key correctly identified as Free (would be rejected by ua_ci_check).")
+
+    # 5. Test new backend analysis endpoints with Team key
+    res_ci = client.post("/analyze/ci-check", json={"data": {"pr_diff": "+++ b/test.py"}}, headers={"x-license-key": team_key})
+    assert res_ci.status_code == 200
+    assert "analyzed_files" in res_ci.json()
+
+    # 6. Test Daily Quota limits (Team limit = 500)
+    db = SessionLocal()
+    team_record = db.query(LicenseKey).filter(LicenseKey.key == team_key).first()
+    team_record.daily_calls = 499
+    db.commit()
+    db.close()
+
+    # Request 500 should succeed
+    res_success = client.post("/analyze/validate-graph", json={"data": {}}, headers={"x-license-key": team_key})
+    assert res_success.status_code == 200
+
+    # Request 501 should fail with 429
+    res_fail = client.post("/analyze/validate-graph", json={"data": {}}, headers={"x-license-key": team_key})
+    assert res_fail.status_code == 429
+    assert res_fail.json()["detail"] == "Daily usage limit exceeded"
+    
+    print("Quota logic and backend analysis endpoints verified successfully.")
 
     print("End-to-End Test Passed!")
 

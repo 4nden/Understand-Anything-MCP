@@ -24,5 +24,7 @@ class LicenseKey(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     email = Column(String, index=True, nullable=True)
     stripe_session_id = Column(String, unique=True, index=True, nullable=True)
+    daily_calls = Column(Integer, default=0)
+    last_call_date = Column(DateTime, default=datetime.datetime.utcnow)
 
 Base.metadata.create_all(bind=engine)

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getGraph } from "../services/understand.js";
-import { getCallers, getImpactAnalysis } from "../services/graph.js";
+import axios from "axios";
+import { config } from "../config.js";
+import { requireTier } from "../services/license.js";
 
 export function registerPremiumTools(server: McpServer) {
     server.tool(
@@ -12,17 +13,23 @@ export function registerPremiumTools(server: McpServer) {
             maxHops: z.number().optional().describe("Maximum number of hops (default 2, up to 2 hops supported for callers)")
         },
         async ({ target, maxHops }) => {
-            const graph = getGraph();
-            if (!graph) {
-                return { content: [{ type: "text", text: "No knowledge graph loaded. Please run ua_scan first." }] };
+            if (!(await requireTier('Pro'))) {
+                throw new Error('ua_find_callers requires a Pro tier license.');
             }
-
-            const hops = maxHops ?? 2;
-            const callers = getCallers(graph, target, hops);
-            
-            return {
-                content: [{ type: "text", text: `Found ${callers.length} callers for ${target} within ${hops} hops:\n- ${callers.join('\n- ')}` }]
-            };
+            try {
+                const response = await axios.post(`${config.apiUrl}/analyze/find-callers`, 
+                    { data: { target, maxHops } },
+                    { headers: { 'x-license-key': config.licenseKey } }
+                );
+                return {
+                    content: [{ type: "text", text: `Backend result: ${JSON.stringify(response.data, null, 2)}` }]
+                };
+            } catch (error: any) {
+                return {
+                    content: [{ type: "text", text: `Backend analysis failed: ${error.response?.data?.detail || error.message}` }],
+                    isError: true,
+                };
+            }
         }
     );
 
@@ -33,16 +40,23 @@ export function registerPremiumTools(server: McpServer) {
             target: z.string().describe("The file or module to analyze for impact")
         },
         async ({ target }) => {
-            const graph = getGraph();
-            if (!graph) {
-                return { content: [{ type: "text", text: "No knowledge graph loaded. Please run ua_scan first." }] };
+            if (!(await requireTier('Pro'))) {
+                throw new Error('ua_impact_analysis requires a Pro tier license.');
             }
-
-            const impactedNodes = getImpactAnalysis(graph, target);
-            
-            return {
-                content: [{ type: "text", text: `Impact analysis for ${target} reveals ${impactedNodes.length} potentially affected nodes:\n- ${impactedNodes.join('\n- ')}` }]
-            };
+            try {
+                const response = await axios.post(`${config.apiUrl}/analyze/impact-analysis`, 
+                    { data: { target } },
+                    { headers: { 'x-license-key': config.licenseKey } }
+                );
+                return {
+                    content: [{ type: "text", text: `Backend result: ${JSON.stringify(response.data, null, 2)}` }]
+                };
+            } catch (error: any) {
+                return {
+                    content: [{ type: "text", text: `Backend analysis failed: ${error.response?.data?.detail || error.message}` }],
+                    isError: true,
+                };
+            }
         }
     );
 }
