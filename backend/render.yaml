@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ua-mcp-backend
+    env: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: GMAIL_ADDRESS
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
