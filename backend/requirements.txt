@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-stripe
-sqlalchemy
-python-dotenv
-psycopg2-binary
-slowapi
