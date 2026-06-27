@@ -77,8 +77,8 @@ Available out of the box with no license required.
 | Tier | Price | Features |
 |---|---|---|
 | **Free** | $0/mo | Basic graph operations, up to 1000 nodes, local storage. |
-| **Pro** | $15/mo | Unlimited nodes, advanced graph analytics, semantic search, priority support. |
-| **Team** | $49/mo | Multi-user sync, CI/CD integration, advanced validation, dedicated support. |
+| **Pro** | $29/mo | Unlimited nodes, advanced graph analytics, semantic search, priority support. |
+| **Team** | $99/mo | Multi-user sync, CI/CD integration, advanced validation, dedicated support. |
 
 Get your license key at: [https://understand-anything.example.com](https://understand-anything.example.com)
 
