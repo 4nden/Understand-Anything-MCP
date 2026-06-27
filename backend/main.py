@@ -91,6 +91,39 @@ def enforce_quota_and_tier(request: Request, db: Session, required_tiers: list):
     db.commit()
     return license_key
 
+import json
+
+def get_incoming_edges(graph: dict, target: str) -> list:
+    if not graph:
+        return []
+    rev_deps = set()
+    edges = graph.get("edges")
+    if isinstance(edges, list):
+        for edge in edges:
+            if isinstance(edge, dict) and edge.get("target") == target:
+                rev_deps.add(edge.get("source"))
+    files = graph.get("files")
+    if isinstance(files, dict):
+        for file_id, file_data in files.items():
+            if isinstance(file_data, dict):
+                imports = file_data.get("imports")
+                if isinstance(imports, list) and target in imports:
+                    rev_deps.add(file_id)
+    return list(rev_deps)
+
+def normalize_node_id(node_id: str, default_type: str = 'file') -> str:
+    prefixes = ['file:', 'func:', 'class:']
+    for prefix in prefixes:
+        if node_id.startswith(prefix):
+            return node_id
+    return f"{default_type}:{node_id}"
+
+def validate_complexity(complexity: str) -> str:
+    valid_complexities = ['simple', 'moderate', 'complex']
+    if complexity in valid_complexities:
+        return complexity
+    raise ValueError(f"Invalid complexity: {complexity}. Must be simple, moderate, or complex.")
+
 class AnalyzeRequest(BaseModel):
     data: dict
 
@@ -121,16 +154,92 @@ def analyze_ci_check(request: Request, req: AnalyzeRequest, db: Session = Depend
 @limiter.limit("20/minute")
 def analyze_validate_graph(request: Request, req: AnalyzeRequest, db: Session = Depends(get_db)):
     enforce_quota_and_tier(request, db, ["Team"])
-    return {"message": "Graph validated successfully"}
+    graph_data_str = req.data.get("graphData")
+    if not graph_data_str:
+         raise HTTPException(status_code=400, detail="Missing graphData")
+    try:
+        graph = json.loads(graph_data_str)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format for graphData")
+        
+    valid_nodes = 0
+    invalid_nodes = 0
+    errors = []
+    
+    nodes = graph.get("nodes", [])
+    if isinstance(nodes, list):
+        for node in nodes:
+            try:
+                node_id = node.get("id")
+                if not node_id:
+                    raise ValueError("Node is missing id")
+                norm_id = normalize_node_id(node_id)
+                comp = node.get("complexity")
+                if comp:
+                    validate_complexity(comp)
+                valid_nodes += 1
+            except Exception as e:
+                invalid_nodes += 1
+                errors.append(str(e))
+                
+    return {
+        "valid_nodes": valid_nodes,
+        "invalid_nodes": invalid_nodes,
+        "errors": errors[:5]
+    }
 
 @app.post("/analyze/find-callers")
 @limiter.limit("20/minute")
 def analyze_find_callers(request: Request, req: AnalyzeRequest, db: Session = Depends(get_db)):
     enforce_quota_and_tier(request, db, ["Pro", "Team"])
-    return {"callers": ["src/main.ts", "src/app.ts"]}
+    target = req.data.get("target")
+    max_hops = req.data.get("maxHops", 2)
+    graph = req.data.get("graph")
+    
+    if not target or not graph:
+        raise HTTPException(status_code=400, detail="Missing target or graph")
+        
+    visited = set()
+    result = set()
+    
+    current_level = [target]
+    for _ in range(max_hops):
+        next_level = set()
+        for node in current_level:
+            if node in visited:
+                continue
+            visited.add(node)
+            
+            callers = get_incoming_edges(graph, node)
+            for caller in callers:
+                result.add(caller)
+                next_level.add(caller)
+        current_level = list(next_level)
+        if not current_level:
+            break
+            
+    return {"callers": list(result)}
 
 @app.post("/analyze/impact-analysis")
 @limiter.limit("20/minute")
 def analyze_impact_analysis(request: Request, req: AnalyzeRequest, db: Session = Depends(get_db)):
     enforce_quota_and_tier(request, db, ["Pro", "Team"])
-    return {"impacted": ["src/api/routes.ts", "src/services/db.ts"]}
+    target = req.data.get("target")
+    graph = req.data.get("graph")
+    
+    if not target or not graph:
+        raise HTTPException(status_code=400, detail="Missing target or graph")
+        
+    result = set()
+    queue = [target]
+    
+    while queue:
+        node = queue.pop(0)
+        callers = get_incoming_edges(graph, node)
+        
+        for caller in callers:
+            if caller not in result:
+                result.add(caller)
+                queue.append(caller)
+                
+    return {"impacted": list(result)}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import axios from "axios";
 import { config } from "../config.js";
 import { requireTier } from "../services/license.js";
+import { getGraph } from "../services/understand.js";
 
 export function registerPremiumTools(server: McpServer) {
     server.tool(
@@ -16,9 +17,10 @@ export function registerPremiumTools(server: McpServer) {
             if (!(await requireTier('Pro'))) {
                 throw new Error('ua_find_callers requires a Pro tier license.');
             }
+            const graph = getGraph();
             try {
                 const response = await axios.post(`${config.apiUrl}/analyze/find-callers`, 
-                    { data: { target, maxHops } },
+                    { data: { target, maxHops, graph } },
                     { headers: { 'x-license-key': config.licenseKey } }
                 );
                 return {
@@ -43,9 +45,10 @@ export function registerPremiumTools(server: McpServer) {
             if (!(await requireTier('Pro'))) {
                 throw new Error('ua_impact_analysis requires a Pro tier license.');
             }
+            const graph = getGraph();
             try {
                 const response = await axios.post(`${config.apiUrl}/analyze/impact-analysis`, 
-                    { data: { target } },
+                    { data: { target, graph } },
                     { headers: { 'x-license-key': config.licenseKey } }
                 );
                 return {

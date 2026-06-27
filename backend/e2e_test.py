@@ -104,15 +104,53 @@ def test_e2e_flow():
     db.close()
 
     # Request 500 should succeed
-    res_success = client.post("/analyze/validate-graph", json={"data": {}}, headers={"x-license-key": team_key})
+    res_success = client.post("/analyze/validate-graph", json={"data": {"graphData": "{}"}}, headers={"x-license-key": team_key})
     assert res_success.status_code == 200
 
     # Request 501 should fail with 429
-    res_fail = client.post("/analyze/validate-graph", json={"data": {}}, headers={"x-license-key": team_key})
+    res_fail = client.post("/analyze/validate-graph", json={"data": {"graphData": "{}"}}, headers={"x-license-key": team_key})
     assert res_fail.status_code == 429
     assert res_fail.json()["detail"] == "Daily usage limit exceeded"
     
     print("Quota logic and backend analysis endpoints verified successfully.")
+    
+    # 7. Test Graph Traversal (maxHops logic)
+    db = SessionLocal()
+    pro_key_record = LicenseKey(key="UA-PRO123", tier="Pro", email="pro@example.com")
+    db.add(pro_key_record)
+    db.commit()
+    db.close()
+    
+    # Mock Graph: A -> B -> C
+    # This means C is called by B, and B is called by A.
+    mock_graph = {
+        "edges": [
+            {"source": "A", "target": "B"},
+            {"source": "B", "target": "C"}
+        ]
+    }
+    
+    # Query callers of C with maxHops = 1 (should return exactly B)
+    res_c_1hop = client.post("/analyze/find-callers", json={"data": {"target": "C", "maxHops": 1, "graph": mock_graph}}, headers={"x-license-key": "UA-PRO123"})
+    assert res_c_1hop.status_code == 200
+    assert set(res_c_1hop.json()["callers"]) == {"B"}
+    
+    # Query callers of C with maxHops = 2 (should return B and A)
+    res_c_2hop = client.post("/analyze/find-callers", json={"data": {"target": "C", "maxHops": 2, "graph": mock_graph}}, headers={"x-license-key": "UA-PRO123"})
+    assert res_c_2hop.status_code == 200
+    assert set(res_c_2hop.json()["callers"]) == {"A", "B"}
+    
+    # Query impact analysis of A (should return B and C)
+    res_a_impact = client.post("/analyze/impact-analysis", json={"data": {"target": "C", "graph": mock_graph}}, headers={"x-license-key": "UA-PRO123"})
+    assert res_a_impact.status_code == 200
+    # Wait! Impact analysis searches reverse dependencies!
+    # If the mock graph is A -> B -> C, then callers of C are B and A. 
+    # But wait, impact analysis of A? The prompt said "impact analysis ... full transitive closure of reverse dependencies".
+    # Wait, reverse dependencies of A? A has no callers.
+    # Impact analysis of C: callers of C are B, callers of B are A. So impact of C is {A, B}.
+    assert set(res_a_impact.json()["impacted"]) == {"A", "B"}
+    
+    print("Graph Traversal logic (maxHops and impact) verified successfully.")
 
     print("End-to-End Test Passed!")
 
