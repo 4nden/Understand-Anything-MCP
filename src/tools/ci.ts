@@ -21,8 +21,8 @@ export const ciToolSchema = {
 export async function handleCiCheck(args: any) {
   const { pr_diff } = args;
 
-  if (!(await requireTier('Team'))) {
-    throw new Error('ua_ci_check requires a Team tier license.');
+  if (!(await requireTier('Pro'))) {
+    throw new Error('This tool requires a Pro tier license.');
   }
 
   try {
@@ -59,8 +59,8 @@ export const validateGraphSchema = {
 export async function handleValidateGraph(args: any) {
   const { graphData } = args;
 
-  if (!(await requireTier('Team'))) {
-    throw new Error('ua_validate_graph requires a Team tier license.');
+  if (!(await requireTier('Pro'))) {
+    throw new Error('This tool requires a Pro tier license.');
   }
 
   try {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { config } from '../config.js';
 
-export type Tier = 'Free' | 'Pro' | 'Team';
+export type Tier = 'Free' | 'Pro';
 
 export interface LicenseInfo {
     valid: boolean;
@@ -56,7 +56,6 @@ export async function validateLicense(): Promise<LicenseInfo> {
 export async function requireTier(minimumTier: Tier): Promise<boolean> {
     const license = await validateLicense();
     if (minimumTier === 'Free') return true;
-    if (minimumTier === 'Pro' && (license.tier === 'Pro' || license.tier === 'Team')) return true;
-    if (minimumTier === 'Team' && license.tier === 'Team') return true;
+    if (minimumTier === 'Pro' && license.tier === 'Pro') return true;
     return false;
 }

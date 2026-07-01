@@ -4,6 +4,7 @@ import { initializeUnderstand } from "./services/understand.js";
 import { validateLicense } from "./services/license.js";
 import { registerCoreTools } from "./tools/core.js";
 import { registerPremiumTools } from "./tools/premium.js";
+import { registerGovernanceTools } from "./tools/governance.js";
 async function main() {
     console.error("Initializing Understand-Anything MCP Server...");
     
@@ -22,9 +23,8 @@ async function main() {
 
     // Register tools
     registerCoreTools(server);
-    if (license.tier === 'Pro' || license.tier === 'Team') {
-        registerPremiumTools(server);
-    }
+    registerPremiumTools(server);
+    registerGovernanceTools(server);
 
     // Start server
     const transport = new StdioServerTransport();

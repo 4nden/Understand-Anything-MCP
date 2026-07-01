@@ -16,10 +16,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.6.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "axios": "^1.7.9",
     "chokidar": "^4.0.3",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "minimatch": "^10.2.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

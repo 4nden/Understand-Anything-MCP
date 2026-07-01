@@ -6,7 +6,13 @@ This MCP Server bridges [Egonex-AI/Understand-Anything](https://github.com/Egone
 
 ## Privacy Policy
 > [!IMPORTANT]
-> **[Link to Privacy Policy](#)** (Placeholder - A real privacy policy URL is required for submission to the Anthropic Connectors Directory. It must confirm that codebase/knowledge-graph data is processed locally and never sent to external servers.)
+> **[Link to Privacy Policy](#)** (Placeholder - A real privacy policy URL is required for submission to the Anthropic Connectors Directory.)
+> 
+> **Data Processing Details:**
+> - License keys and email addresses are securely stored for billing purposes.
+> - **Purely local, no network calls:** `ua_status`, `ua_scan`, `ua_graph_summary`, `ua_explain`, `ua_onboarding_doc`.
+> - **Sends graph data to the backend (on both Free and Pro):** `ua_precheck`, `ua_find_callers`, `ua_impact_analysis`, `ua_rules`, `ua_ci_check`, `ua_validate_graph`. When these tools are used, the full local graph object is sent per request to our backend for processing, license, and quota validation.
+> - **No source code contents are transmitted**, only graph metadata (file paths and import relationships). All backend graph processing is done purely in-memory per-request and is never persisted.
 
 Understand-Anything is a production-ready MCP (Model Context Protocol) server that empowers LLMs to dynamically construct, update, and analyze complex knowledge graphs of codebases and text.
 
@@ -54,13 +60,12 @@ Available out of the box with no license required.
   - *Input*: `{"target": "src/index.ts"}`
 - `ua_onboarding_doc`: Generates onboarding context.
 
-### Premium Tools (Pro Tier - $29/mo)
+### Premium Tools (Pro Tier)
 - `ua_find_callers`: Retrieves reverse dependencies up to 2 hops.
   - *Input*: `{"target": "src/utils.ts"}`
 - `ua_impact_analysis`: Retrieves full transitive closure of reverse dependencies.
   - *Input*: `{"target": "src/core/db.ts"}`
 
-### Enterprise Tools (Team Tier - $99/mo)
 - `ua_validate_graph`: Checks the knowledge graph schema for corruption.
 - `ua_ci_check`: Analyzes Git PR diffs for architectural impact.
   - *Input*: `{"pr_diff": "..."}`
@@ -69,11 +74,10 @@ Available out of the box with no license required.
 
 | Tier | Price | Features |
 |---|---|---|
-| **Free** | $0/mo | Basic graph operations, local storage. |
-| **Pro** | $29/mo | Unlimited nodes, advanced graph analytics, semantic search, priority support. |
-| **Team** | $99/mo | Multi-user sync, CI/CD integration, advanced validation, dedicated support. |
+| **Free** | $0 forever | Basic graph operations, local storage. |
+| **Pro** | $10/month OR $50 one-time | Unlimited nodes, advanced graph analytics, semantic search, priority support. (Lifetime access limited availability) |
 
-Get your license key at: [https://understand-anything.example.com](https://understand-anything.example.com)
+Get your license key at: [Insert your Stripe Payment Link here]
 
 ## Troubleshooting
 
