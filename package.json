@@ -4,6 +4,23 @@
   "description": "Understand-Anything MCP Server",
   "main": "dist/index.js",
   "type": "module",
+  "author": "Understand Anything Protocol",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/4nden/Understand-Anything-MCP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/4nden/Understand-Anything-MCP/issues"
+  },
+  "keywords": [
+    "mcp",
+    "knowledge-graph",
+    "llm",
+    "codebase",
+    "analysis",
+    "claude"
+  ],
   "files": [
     "dist",
     "README.md",

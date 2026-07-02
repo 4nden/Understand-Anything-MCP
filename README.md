@@ -1,12 +1,10 @@
 # Understand-Anything MCP Server
 
-![Claude Desktop Integration](examples/claude-desktop-screenshot.md)
-
 This MCP Server bridges [Egonex-AI/Understand-Anything](https://github.com/Egonex-AI/Understand-Anything) with Claude Desktop and other MCP clients, giving LLMs native access to full-codebase structural graphs, architecture analysis, and CI/CD validation.
 
 ## Privacy Policy
 > [!IMPORTANT]
-> **[Link to Privacy Policy](#)** (Placeholder - A real privacy policy URL is required for submission to the Anthropic Connectors Directory.)
+> **[Link to Privacy Policy](https://4nden.github.io/Understand-Anything-MCP/)**
 > 
 > **Data Processing Details:**
 > - License keys and email addresses are securely stored for billing purposes.
